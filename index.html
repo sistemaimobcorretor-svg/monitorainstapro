@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ImobiVision – Monitor Grátis de Construtoras</title>
+    <title>ImobiVision – Monitor de Construtoras (Gratuito)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,13 +21,13 @@
 <body class="bg-slate-50">
 
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Header -->
     <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
         <div>
             <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-blue-700 bg-clip-text text-transparent">
                 <i class="fab fa-instagram text-indigo-600 mr-2"></i>ImobiVision
             </h1>
-            <p class="text-slate-500">Monitoramento gratuito de construtoras – sem API, sem cadastro</p>
+            <p class="text-slate-500">Monitoramento real de construtoras – sem API paga, sem cadastro</p>
+            <p class="text-xs text-green-600 mt-1"><i class="fas fa-check-circle"></i> Usa scraping direto + proxy gratuito</p>
         </div>
         <div class="flex gap-3">
             <button id="refreshBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl shadow flex items-center gap-2">
@@ -38,7 +39,6 @@
         </div>
     </div>
 
-    <!-- Status Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-2xl p-4 shadow flex items-center gap-3">
             <div class="bg-indigo-100 p-2 rounded-full"><i class="fas fa-building text-indigo-600"></i></div>
@@ -46,19 +46,18 @@
         </div>
         <div class="bg-white rounded-2xl p-4 shadow flex items-center gap-3">
             <div class="bg-blue-100 p-2 rounded-full"><i class="fas fa-images text-blue-600"></i></div>
-            <div><p class="text-xs text-slate-400">Posts</p><p id="totalPosts" class="text-2xl font-bold">0</p></div>
+            <div><p class="text-xs text-slate-400">Posts armazenados</p><p id="totalPosts" class="text-2xl font-bold">0</p></div>
         </div>
         <div class="bg-white rounded-2xl p-4 shadow flex items-center gap-3">
             <div class="bg-amber-100 p-2 rounded-full"><i class="fas fa-clock text-amber-600"></i></div>
             <div><p class="text-xs text-slate-400">Última verificação</p><p id="lastScan" class="text-sm font-semibold">--:--</p></div>
         </div>
         <div class="bg-white rounded-2xl p-4 shadow flex items-center gap-3">
-            <div class="bg-green-100 p-2 rounded-full"><i class="fas fa-check-circle text-green-600"></i></div>
-            <div><p class="text-xs text-slate-400">Status</p><p id="apiStatus" class="text-sm font-semibold text-green-600">Online</p></div>
+            <div class="bg-green-100 p-2 rounded-full"><i class="fas fa-bell text-green-600"></i></div>
+            <div><p class="text-xs text-slate-400">Alertas</p><p id="alertStatus" class="text-sm font-semibold text-green-600">Ativo</p></div>
         </div>
     </div>
 
-    <!-- Container das contas -->
     <div id="accountsContainer" class="space-y-6">
         <div class="text-center py-12 bg-white rounded-2xl shadow">
             <i class="fab fa-instagram text-4xl text-slate-300 mb-3"></i>
@@ -67,7 +66,6 @@
     </div>
 </div>
 
-<!-- Modal de adicionar conta -->
 <div id="addModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6">
         <h3 class="text-xl font-semibold mb-2">➕ Adicionar construtora</h3>
@@ -85,18 +83,15 @@
 </audio>
 
 <script>
-    // ========== STORAGE ==========
-    const STORAGE_ACCOUNTS = 'imobi_accounts_final';
-    const STORAGE_POSTS = 'imobi_posts_final';
-    const STORAGE_LAST_IDS = 'imobi_last_ids_final';
-
+    // ========== CONFIGURAÇÃO ==========
+    const STORAGE_ACCOUNTS = 'imobi_accounts_def';
+    const STORAGE_POSTS = 'imobi_posts_def';
+    const STORAGE_LAST_IDS = 'imobi_last_ids_def';
     let trackedAccounts = [];
-    let postsData = {};       // { username: [posts] }
+    let postsData = {};
     let lastPostIds = {};
     let pollingInterval = null;
-    let lastGlobalFetch = new Date();
 
-    // Carregar dados salvos
     function loadData() {
         const savedAccounts = localStorage.getItem(STORAGE_ACCOUNTS);
         if (savedAccounts) trackedAccounts = JSON.parse(savedAccounts);
@@ -104,11 +99,9 @@
         if (savedPosts) postsData = JSON.parse(savedPosts);
         const savedIds = localStorage.getItem(STORAGE_LAST_IDS);
         if (savedIds) lastPostIds = JSON.parse(savedIds);
-
         if (trackedAccounts.length === 0) {
             trackedAccounts = ['mrveng', 'cyrelaoficial'];
         }
-        // Se não houver posts, inicializa com array vazio
         for (let acc of trackedAccounts) {
             if (!postsData[acc]) postsData[acc] = [];
         }
@@ -120,18 +113,16 @@
         localStorage.setItem(STORAGE_LAST_IDS, JSON.stringify(lastPostIds));
     }
 
-    // ========== SCRAPING REAL (sem chave, via proxy e headers corretos) ==========
-    // Usamos o endpoint interno do Instagram com headers adequados e proxy CORS gratuito
-    async function fetchRealPosts(username) {
+    // ========== SCRAPING REAL (SEM CHAVE) ==========
+    async function fetchInstagramPosts(username) {
         try {
-            // URL do Instagram que retorna dados em JSON (ainda funcional para perfis públicos)
+            // Usamos o endpoint interno do Instagram + proxy CORS gratuito
             const url = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
-            // Usamos um proxy CORS gratuito e confiável
             const proxy = "https://cors-anywhere.herokuapp.com/";
             const response = await fetch(proxy + url, {
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'X-IG-App-ID': '936619743392459',  // ID do app web do Instagram
+                    'X-IG-App-ID': '936619743392459',
                     'Accept': 'application/json'
                 }
             });
@@ -152,74 +143,62 @@
             }));
             return posts;
         } catch (err) {
-            console.error(`Erro ao buscar @${username}:`, err);
+            console.error(`Erro scraping @${username}:`, err);
             return null;
         }
     }
 
-    // ========== ATUALIZAÇÃO PRINCIPAL ==========
-    async function refreshAllAccounts() {
-        showToast("🔍 Verificando novidades...", "info");
+    // ========== ATUALIZAÇÃO CENTRAL ==========
+    async function refreshAll() {
+        showToast("🔍 Verificando novas postagens...", "info");
         let anyNew = false;
-
         for (let username of trackedAccounts) {
-            const newPosts = await fetchRealPosts(username);
+            const newPosts = await fetchInstagramPosts(username);
             if (newPosts && newPosts.length > 0) {
                 const oldPosts = postsData[username] || [];
                 const oldIds = new Set(oldPosts.map(p => p.id));
-                const freshPosts = newPosts.filter(p => !oldIds.has(p.id));
-
-                if (freshPosts.length > 0) {
+                const fresh = newPosts.filter(p => !oldIds.has(p.id));
+                if (fresh.length > 0) {
                     anyNew = true;
-                    // Adiciona novos posts no início (mais recentes primeiro)
-                    postsData[username] = [...freshPosts, ...oldPosts].slice(0, 30);
-                    for (let post of freshPosts) {
-                        triggerAlert(username, post);
-                    }
-                    // Atualiza o último ID conhecido
+                    postsData[username] = [...fresh, ...oldPosts].slice(0, 30);
+                    for (let post of fresh) triggerAlert(username, post);
                     if (newPosts[0]) lastPostIds[username] = newPosts[0].id;
                     saveAll();
                 } else {
-                    // Apenas atualiza a lista sem alarme
+                    // Apenas atualiza a lista se não há novidades
                     postsData[username] = newPosts.slice(0, 30);
                     saveAll();
                 }
             } else if (newPosts === null) {
-                // Se falhou, mantém dados antigos e mostra erro discreto
+                // Se falhou, mantém dados antigos (se existir)
                 if (!postsData[username] || postsData[username].length === 0) {
-                    // Fallback: gera um post de exemplo para não ficar vazio
-                    postsData[username] = [generateFallbackPost(username)];
+                    postsData[username] = [fallbackPost(username)];
                     saveAll();
                 }
             }
         }
-        renderAllAccounts();
+        renderAll();
         updateStats();
-        if (anyNew) {
-            showToast("✅ Novas postagens detectadas! Alertas disparados.", "success");
-        } else {
-            showToast("✓ Nenhuma novidade encontrada.", "info");
-        }
+        if (anyNew) showToast("✅ Novas postagens detectadas! Alertas disparados.", "success");
+        else showToast("✓ Nenhuma novidade encontrada.", "info");
     }
 
-    // Gera um post de fallback caso o scraping falhe (mantém a interface viva)
-    function generateFallbackPost(username) {
+    function fallbackPost(username) {
         return {
-            id: `fallback_${username}_${Date.now()}`,
+            id: `fallback_${Date.now()}`,
             imageUrl: "https://placehold.co/400x300/e2e8f0/475569?text=Instagram",
-            caption: `Perfil @${username} temporariamente indisponível. Tente novamente mais tarde.`,
+            caption: `Não foi possível carregar posts de @${username}. Verifique se o perfil é público.`,
             timestamp: new Date().toISOString(),
             permalink: `https://instagram.com/${username}`,
             likes: 0
         };
     }
 
-    // Alerta visual + sonoro + notificação
     function triggerAlert(account, post) {
         const audio = document.getElementById('alertSound');
-        audio.play().catch(e => console.log("Som bloqueado"));
+        audio.play().catch(() => {});
         if (Notification.permission === "granted") {
-            new Notification(`📸 NOVA POSTAGEM @${account}`, {
+            new Notification(`📸 Nova postagem de @${account}`, {
                 body: post.caption.substring(0, 90),
                 icon: post.imageUrl
             });
@@ -236,8 +215,8 @@
         setTimeout(() => card?.classList.remove('alert-pulse'), 1000);
     }
 
-    // ========== RENDERIZAÇÃO ==========
-    function renderAllAccounts() {
+    // ========== RENDER ==========
+    function renderAll() {
         const container = document.getElementById('accountsContainer');
         if (trackedAccounts.length === 0) {
             container.innerHTML = `<div class="bg-white rounded-2xl p-10 text-center">Nenhuma construtora monitorada.</div>`;
@@ -256,7 +235,7 @@
                         <div class="p-3">
                             <p class="text-sm text-slate-700 line-clamp-2">${p.caption.substring(0,90)}</p>
                             <div class="flex justify-between mt-2 text-xs text-slate-400">
-                                <span><i class="far fa-heart"></i> ${p.likes || 0}</span>
+                                <span><i class="far fa-heart"></i> ${p.likes}</span>
                                 <span>${date}</span>
                                 <a href="${p.permalink}" target="_blank" class="text-indigo-500">Ver</a>
                             </div>
@@ -273,28 +252,28 @@
                             <button class="deleteAccount text-red-500" data-account="${acc}"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                    <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">${postsHtml || '<p class="col-span-full">Nenhum post encontrado</p>'}</div>
+                    <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">${postsHtml || '<p class="col-span-full">Nenhum post</p>'}</div>
                 </div>
             `;
         }
         container.innerHTML = html;
-        attachButtonEvents();
+        attachEvents();
     }
 
-    function attachButtonEvents() {
+    function attachEvents() {
         document.querySelectorAll('.refreshSingle').forEach(btn => {
             btn.onclick = async () => {
                 const acc = btn.getAttribute('data-account');
                 showToast(`Verificando @${acc}...`, "info");
-                const newPosts = await fetchRealPosts(acc);
-                if (newPosts && newPosts.length) {
+                const posts = await fetchInstagramPosts(acc);
+                if (posts && posts.length) {
                     const oldIds = new Set((postsData[acc] || []).map(p=>p.id));
-                    const fresh = newPosts.filter(p=>!oldIds.has(p.id));
+                    const fresh = posts.filter(p=>!oldIds.has(p.id));
                     if (fresh.length) {
                         postsData[acc] = [...fresh, ...(postsData[acc]||[])].slice(0,30);
                         for(let p of fresh) triggerAlert(acc, p);
                         saveAll();
-                        renderAllAccounts();
+                        renderAll();
                         showToast(`@${acc}: ${fresh.length} nova(s) postagem(ns)!`, "success");
                     } else showToast(`@${acc}: nenhuma novidade`, "info");
                 } else showToast(`Erro ao buscar @${acc}`, "error");
@@ -308,7 +287,7 @@
                 delete postsData[acc];
                 delete lastPostIds[acc];
                 saveAll();
-                renderAllAccounts();
+                renderAll();
                 updateStats();
                 showToast(`@${acc} removida`, "info");
             };
@@ -320,7 +299,7 @@
         let total = Object.values(postsData).reduce((s, arr) => s + (arr?.length || 0), 0);
         document.getElementById('totalPosts').innerText = total;
         document.getElementById('lastScan').innerHTML = `<i class="far fa-clock"></i> ${new Date().toLocaleTimeString()}`;
-        document.getElementById('apiStatus').innerHTML = '<i class="fas fa-check-circle"></i> Scraping ativo';
+        document.getElementById('alertStatus').innerHTML = '✅ Ativo (Scraping)';
     }
 
     function showToast(msg, type) {
@@ -337,22 +316,20 @@
         trackedAccounts.push(username);
         postsData[username] = [];
         saveAll();
-        renderAllAccounts();
+        renderAll();
         updateStats();
         showToast(`@${username} adicionada!`, "success");
-        // Tenta buscar posts da nova conta
-        setTimeout(() => refreshAllAccounts(), 500);
+        setTimeout(() => refreshAll(), 500);
     }
 
     function startPolling() {
         if (pollingInterval) clearInterval(pollingInterval);
-        pollingInterval = setInterval(() => refreshAllAccounts(), 300000); // 5 minutos
+        pollingInterval = setInterval(() => refreshAll(), 300000); // 5 minutos
     }
 
-    // Inicialização
     function init() {
         loadData();
-        renderAllAccounts();
+        renderAll();
         updateStats();
         startPolling();
         document.getElementById('addAccountBtn').onclick = () => document.getElementById('addModal').classList.remove('hidden');
@@ -363,7 +340,7 @@
             document.getElementById('addModal').classList.add('hidden');
             document.getElementById('newUsername').value = '';
         };
-        document.getElementById('refreshBtn').onclick = refreshAllAccounts;
+        document.getElementById('refreshBtn').onclick = refreshAll;
         if (Notification.permission === "default") Notification.requestPermission();
     }
 
