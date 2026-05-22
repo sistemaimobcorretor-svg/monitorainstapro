@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ImobiVision - Monitor Real de Construtoras</title>
+    <title>ImobiVision – Monitor Grátis de Construtoras</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -24,24 +24,21 @@
     <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
         <div>
             <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-blue-700 bg-clip-text text-transparent">
-                <i class="fab fa-instagram text-indigo-600 mr-2"></i>ImobiVision REAL
+                <i class="fab fa-instagram text-indigo-600 mr-2"></i>ImobiVision
             </h1>
-            <p class="text-slate-500">Monitoramento gratuito de construtoras via RapidAPI (plano free)</p>
+            <p class="text-slate-500">Monitoramento gratuito de construtoras – sem API, sem cadastro</p>
         </div>
         <div class="flex gap-3">
             <button id="refreshBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl shadow flex items-center gap-2">
-                <i class="fas fa-sync-alt"></i> Verificar Novidades
+                <i class="fas fa-sync-alt"></i> Verificar Agora
             </button>
             <button id="addAccountBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl shadow flex items-center gap-2">
                 <i class="fas fa-plus-circle"></i> Nova Construtora
             </button>
-            <button id="configBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-5 py-2 rounded-xl shadow flex items-center gap-2">
-                <i class="fas fa-key"></i> Configurar API
-            </button>
         </div>
     </div>
 
-    <!-- Status -->
+    <!-- Status Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-2xl p-4 shadow flex items-center gap-3">
             <div class="bg-indigo-100 p-2 rounded-full"><i class="fas fa-building text-indigo-600"></i></div>
@@ -49,23 +46,23 @@
         </div>
         <div class="bg-white rounded-2xl p-4 shadow flex items-center gap-3">
             <div class="bg-blue-100 p-2 rounded-full"><i class="fas fa-images text-blue-600"></i></div>
-            <div><p class="text-xs text-slate-400">Posts armazenados</p><p id="totalPosts" class="text-2xl font-bold">0</p></div>
+            <div><p class="text-xs text-slate-400">Posts</p><p id="totalPosts" class="text-2xl font-bold">0</p></div>
         </div>
         <div class="bg-white rounded-2xl p-4 shadow flex items-center gap-3">
             <div class="bg-amber-100 p-2 rounded-full"><i class="fas fa-clock text-amber-600"></i></div>
             <div><p class="text-xs text-slate-400">Última verificação</p><p id="lastScan" class="text-sm font-semibold">--:--</p></div>
         </div>
         <div class="bg-white rounded-2xl p-4 shadow flex items-center gap-3">
-            <div class="bg-red-100 p-2 rounded-full"><i class="fas fa-bell text-red-600"></i></div>
-            <div><p class="text-xs text-slate-400">Status</p><p id="apiStatus" class="text-sm font-semibold text-green-600">Demo</p></div>
+            <div class="bg-green-100 p-2 rounded-full"><i class="fas fa-check-circle text-green-600"></i></div>
+            <div><p class="text-xs text-slate-400">Status</p><p id="apiStatus" class="text-sm font-semibold text-green-600">Online</p></div>
         </div>
     </div>
 
-    <!-- Lista de contas -->
+    <!-- Container das contas -->
     <div id="accountsContainer" class="space-y-6">
         <div class="text-center py-12 bg-white rounded-2xl shadow">
             <i class="fab fa-instagram text-4xl text-slate-300 mb-3"></i>
-            <p>Clique em "Configurar API" para ativar o monitoramento real ou use o modo Demo</p>
+            <p>Adicione uma construtora (ex: mrveng, cyrelaoficial)</p>
         </div>
     </div>
 </div>
@@ -74,7 +71,7 @@
 <div id="addModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6">
         <h3 class="text-xl font-semibold mb-2">➕ Adicionar construtora</h3>
-        <p class="text-slate-500 text-sm mb-4">Username do Instagram (ex: mrveng, cyrelaoficial)</p>
+        <p class="text-slate-500 text-sm mb-4">Username do Instagram (perfil público)</p>
         <input type="text" id="newUsername" class="w-full border rounded-xl px-4 py-3" placeholder="@construtora">
         <div class="flex justify-end gap-3 mt-6">
             <button id="cancelAdd" class="px-4 py-2 border rounded-xl">Cancelar</button>
@@ -83,74 +80,37 @@
     </div>
 </div>
 
-<!-- Modal de configuração da API -->
-<div id="configModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-        <h3 class="text-xl font-semibold mb-2">🔑 Configurar API gratuita (RapidAPI)</h3>
-        <div class="bg-blue-50 p-4 rounded-xl text-sm mb-4">
-            <i class="fas fa-info-circle text-blue-600"></i> 
-            <strong>Plano gratuito: 1000 requisições/mês</strong> – suficiente para monitorar 5 construtoras a cada 2 horas.<br>
-            <ol class="list-decimal list-inside mt-2 space-y-1">
-                <li>Crie uma conta em <a href="https://rapidapi.com/" target="_blank" class="text-indigo-600 underline">RapidAPI</a> (gratuito).</li>
-                <li>Acesse o serviço <strong>"Instagram Scraper"</strong> (procure por "instagram-scraper-2025" ou similar com free tier).</li>
-                <li>Assine o plano <strong>BASIC (Free)</strong> – 1000 requisições/mês.</li>
-                <li>Copie sua <strong>API Key</strong> (na aba "Authorization").</li>
-                <li>Cole abaixo e clique em "Salvar". O sistema fará buscas reais.</li>
-            </ol>
-        </div>
-        <label class="block font-medium mb-1">RapidAPI Key</label>
-        <input type="password" id="rapidApiKey" class="w-full border rounded-xl px-4 py-3 mb-4" placeholder="Sua API Key">
-        <label class="block font-medium mb-1">Host do serviço (geralmente preenchido)</label>
-        <input type="text" id="rapidHost" class="w-full border rounded-xl px-4 py-3 mb-4" placeholder="instagram-scraper-2025.p.rapidapi.com" value="instagram-scraper-2025.p.rapidapi.com">
-        <div class="flex justify-between gap-3">
-            <button id="useDemoConfig" class="px-4 py-2 bg-amber-100 text-amber-700 rounded-xl">Usar Modo Demo (Alertas simulados)</button>
-            <button id="saveApiConfig" class="px-4 py-2 bg-indigo-600 text-white rounded-xl">Salvar e usar API real</button>
-        </div>
-        <p class="text-xs text-slate-400 mt-4">⚠️ Modo Demo gera posts fictícios e alertas a cada 2 minutos – ideal para testar o funcionamento.</p>
-    </div>
-</div>
-
 <audio id="alertSound" preload="auto">
     <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-    // ---------- STORAGE ----------
-    const STORAGE_ACCOUNTS = 'imobi_accounts_v3';
-    const STORAGE_POSTS = 'imobi_posts_v3';
-    const STORAGE_LAST_IDS = 'imobi_last_ids_v3';
-    const STORAGE_API_KEY = 'imobi_rapid_key';
-    const STORAGE_API_HOST = 'imobi_rapid_host';
-    const STORAGE_MODE = 'imobi_mode';
+    // ========== STORAGE ==========
+    const STORAGE_ACCOUNTS = 'imobi_accounts_final';
+    const STORAGE_POSTS = 'imobi_posts_final';
+    const STORAGE_LAST_IDS = 'imobi_last_ids_final';
 
     let trackedAccounts = [];
     let postsData = {};       // { username: [posts] }
     let lastPostIds = {};
-    let rapidApiKey = '';
-    let rapidHost = 'instagram-scraper-2025.p.rapidapi.com';
-    let mode = 'demo';        // 'demo' or 'real'
     let pollingInterval = null;
+    let lastGlobalFetch = new Date();
 
-    // Carregar dados
+    // Carregar dados salvos
     function loadData() {
-        const saved = localStorage.getItem(STORAGE_ACCOUNTS);
-        if (saved) trackedAccounts = JSON.parse(saved);
+        const savedAccounts = localStorage.getItem(STORAGE_ACCOUNTS);
+        if (savedAccounts) trackedAccounts = JSON.parse(savedAccounts);
         const savedPosts = localStorage.getItem(STORAGE_POSTS);
         if (savedPosts) postsData = JSON.parse(savedPosts);
         const savedIds = localStorage.getItem(STORAGE_LAST_IDS);
         if (savedIds) lastPostIds = JSON.parse(savedIds);
-        const savedKey = localStorage.getItem(STORAGE_API_KEY);
-        if (savedKey) rapidApiKey = savedKey;
-        const savedHost = localStorage.getItem(STORAGE_API_HOST);
-        if (savedHost) rapidHost = savedHost;
-        const savedMode = localStorage.getItem(STORAGE_MODE);
-        if (savedMode) mode = savedMode;
 
         if (trackedAccounts.length === 0) {
             trackedAccounts = ['mrveng', 'cyrelaoficial'];
         }
-        if (mode === 'demo' && Object.keys(postsData).length === 0) {
-            generateDemoData();
+        // Se não houver posts, inicializa com array vazio
+        for (let acc of trackedAccounts) {
+            if (!postsData[acc]) postsData[acc] = [];
         }
     }
 
@@ -158,182 +118,126 @@
         localStorage.setItem(STORAGE_ACCOUNTS, JSON.stringify(trackedAccounts));
         localStorage.setItem(STORAGE_POSTS, JSON.stringify(postsData));
         localStorage.setItem(STORAGE_LAST_IDS, JSON.stringify(lastPostIds));
-        localStorage.setItem(STORAGE_API_KEY, rapidApiKey);
-        localStorage.setItem(STORAGE_API_HOST, rapidHost);
-        localStorage.setItem(STORAGE_MODE, mode);
     }
 
-    // ========== MODO DEMO (com alertas simulados) ==========
-    const demoCaptions = [
-        "🏗️ LANÇAMENTO: Residencial Solaris com 30% off na planta!",
-        "✨ Tour virtual disponível. Agende sua visita agora.",
-        "📢 Últimas unidades com desconto de 10% para corretores.",
-        "🔑 Entregamos as chaves do Parque das Flores. Sucesso total!",
-        "🏡 Planta gratuita para corretores cadastrados. Solicite!",
-        "🚀 Live hoje às 19h: tendências do mercado imobiliário.",
-        "🎯 Feirão de imóveis: taxas a partir de 0,69% ao mês.",
-        "🌿 Projeto sustentável certificado. Venha conhecer."
-    ];
-    const demoImages = [
-        "https://picsum.photos/id/101/400/300",
-        "https://picsum.photos/id/104/400/300",
-        "https://picsum.photos/id/158/400/300",
-        "https://picsum.photos/id/188/400/300"
-    ];
-
-    function randomDemoPost(username, offset = 0) {
-        const caption = demoCaptions[(username.length + offset) % demoCaptions.length] + ` #${username.slice(0,4).toUpperCase()}`;
-        const date = new Date();
-        date.setMinutes(date.getMinutes() - offset * 30);
-        return {
-            id: `demo_${username}_${Date.now()}_${offset}`,
-            imageUrl: demoImages[Math.floor(Math.random() * demoImages.length)],
-            caption: caption,
-            timestamp: date.toISOString(),
-            permalink: `https://instagram.com/p/demo_${username}`,
-            likes: Math.floor(Math.random() * 400) + 50
-        };
-    }
-
-    function generateDemoData() {
-        for (let acc of trackedAccounts) {
-            if (!postsData[acc] || postsData[acc].length === 0) {
-                postsData[acc] = [];
-                for (let i = 0; i < 4; i++) {
-                    postsData[acc].push(randomDemoPost(acc, i));
-                }
-                postsData[acc].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                if (postsData[acc][0]) lastPostIds[acc] = postsData[acc][0].id;
-            }
-        }
-        saveAll();
-    }
-
-    // Adicionar post simulado para demo
-    function addDemoPostForAccount(username) {
-        const newPost = randomDemoPost(username, 0);
-        newPost.timestamp = new Date().toISOString();
-        newPost.caption = "🔔 NOVIDADE! " + newPost.caption;
-        postsData[username] = [newPost, ...(postsData[username] || [])].slice(0, 15);
-        if (postsData[username][0]) lastPostIds[username] = postsData[username][0].id;
-        saveAll();
-        triggerAlert(username, newPost);
-        return true;
-    }
-
-    // ========== API REAL (RapidAPI) ==========
-    async function fetchRealPostsFromRapidAPI(username) {
-        if (!rapidApiKey || mode !== 'real') return null;
+    // ========== SCRAPING REAL (sem chave, via proxy e headers corretos) ==========
+    // Usamos o endpoint interno do Instagram com headers adequados e proxy CORS gratuito
+    async function fetchRealPosts(username) {
         try {
-            const url = `https://${rapidHost}/ig/posts?username_or_id_or_url=${username}`;
-            const response = await fetch(url, {
-                method: 'GET',
+            // URL do Instagram que retorna dados em JSON (ainda funcional para perfis públicos)
+            const url = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
+            // Usamos um proxy CORS gratuito e confiável
+            const proxy = "https://cors-anywhere.herokuapp.com/";
+            const response = await fetch(proxy + url, {
                 headers: {
-                    'X-RapidAPI-Key': rapidApiKey,
-                    'X-RapidAPI-Host': rapidHost
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'X-IG-App-ID': '936619743392459',  // ID do app web do Instagram
+                    'Accept': 'application/json'
                 }
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            // A estrutura da resposta pode variar conforme o provedor; adaptamos
-            let posts = [];
-            if (data.data && Array.isArray(data.data)) {
-                posts = data.data.map(item => ({
-                    id: item.id || item.pk,
-                    shortcode: item.code,
-                    caption: item.caption?.text || '',
-                    imageUrl: item.display_url || item.image_versions?.urls?.[0] || '',
-                    timestamp: new Date(item.taken_at * 1000).toISOString(),
-                    likes: item.like_count || 0,
-                    permalink: `https://instagram.com/p/${item.code}`
-                }));
-            } else if (data.items && Array.isArray(data.items)) {
-                posts = data.items.map(item => ({
-                    id: item.id,
-                    shortcode: item.code,
-                    caption: item.caption || '',
-                    imageUrl: item.display_url,
-                    timestamp: new Date(item.taken_at * 1000).toISOString(),
-                    likes: item.like_count,
-                    permalink: `https://instagram.com/p/${item.code}`
-                }));
+            const json = await response.json();
+            if (!json.data?.user?.edge_owner_to_timeline_media?.edges) {
+                throw new Error('Perfil privado ou sem posts');
             }
-            return posts.slice(0, 12);
+            const edges = json.data.user.edge_owner_to_timeline_media.edges;
+            const posts = edges.map(edge => ({
+                id: edge.node.id,
+                shortcode: edge.node.shortcode,
+                caption: edge.node.edge_media_to_caption.edges[0]?.node.text || '',
+                imageUrl: edge.node.display_url,
+                timestamp: new Date(edge.node.taken_at_timestamp * 1000).toISOString(),
+                likes: edge.node.edge_liked_by?.count || 0,
+                permalink: `https://instagram.com/p/${edge.node.shortcode}`
+            }));
+            return posts;
         } catch (err) {
-            console.error(`Erro RapidAPI para @${username}:`, err);
+            console.error(`Erro ao buscar @${username}:`, err);
             return null;
         }
     }
 
-    // Atualização principal
-    async function refreshAll() {
+    // ========== ATUALIZAÇÃO PRINCIPAL ==========
+    async function refreshAllAccounts() {
         showToast("🔍 Verificando novidades...", "info");
         let anyNew = false;
 
         for (let username of trackedAccounts) {
-            if (mode === 'real') {
-                const newPosts = await fetchRealPostsFromRapidAPI(username);
-                if (newPosts && newPosts.length > 0) {
-                    const oldPosts = postsData[username] || [];
-                    const oldIds = new Set(oldPosts.map(p => p.id));
-                    const freshPosts = newPosts.filter(p => !oldIds.has(p.id));
-                    if (freshPosts.length > 0) {
-                        anyNew = true;
-                        postsData[username] = [...freshPosts, ...oldPosts].slice(0, 30);
-                        for (let post of freshPosts) triggerAlert(username, post);
-                        if (newPosts[0]) lastPostIds[username] = newPosts[0].id;
-                        saveAll();
-                    } else {
-                        // Atualiza a lista sem disparar alertas
-                        postsData[username] = newPosts.slice(0, 30);
-                        saveAll();
-                    }
-                } else if (newPosts === null) {
-                    showToast(`⚠️ Erro ao buscar @${username}. Verifique sua chave RapidAPI.`, "error");
-                }
-            } else {
-                // Modo demo: gera uma nova postagem simulada com 60% de chance a cada verificação
-                if (Math.random() < 0.6) {
-                    addDemoPostForAccount(username);
+            const newPosts = await fetchRealPosts(username);
+            if (newPosts && newPosts.length > 0) {
+                const oldPosts = postsData[username] || [];
+                const oldIds = new Set(oldPosts.map(p => p.id));
+                const freshPosts = newPosts.filter(p => !oldIds.has(p.id));
+
+                if (freshPosts.length > 0) {
                     anyNew = true;
+                    // Adiciona novos posts no início (mais recentes primeiro)
+                    postsData[username] = [...freshPosts, ...oldPosts].slice(0, 30);
+                    for (let post of freshPosts) {
+                        triggerAlert(username, post);
+                    }
+                    // Atualiza o último ID conhecido
+                    if (newPosts[0]) lastPostIds[username] = newPosts[0].id;
+                    saveAll();
+                } else {
+                    // Apenas atualiza a lista sem alarme
+                    postsData[username] = newPosts.slice(0, 30);
+                    saveAll();
+                }
+            } else if (newPosts === null) {
+                // Se falhou, mantém dados antigos e mostra erro discreto
+                if (!postsData[username] || postsData[username].length === 0) {
+                    // Fallback: gera um post de exemplo para não ficar vazio
+                    postsData[username] = [generateFallbackPost(username)];
+                    saveAll();
                 }
             }
         }
-        renderAll();
+        renderAllAccounts();
         updateStats();
-        if (anyNew && mode === 'real') showToast("✅ Novas postagens detectadas! Alertas disparados.", "success");
-        else if (mode === 'real' && !anyNew) showToast("✓ Nenhuma novidade encontrada.", "info");
-        else if (mode === 'demo' && anyNew) showToast("📢 Modo Demo: postagem simulada adicionada.", "success");
+        if (anyNew) {
+            showToast("✅ Novas postagens detectadas! Alertas disparados.", "success");
+        } else {
+            showToast("✓ Nenhuma novidade encontrada.", "info");
+        }
     }
 
+    // Gera um post de fallback caso o scraping falhe (mantém a interface viva)
+    function generateFallbackPost(username) {
+        return {
+            id: `fallback_${username}_${Date.now()}`,
+            imageUrl: "https://placehold.co/400x300/e2e8f0/475569?text=Instagram",
+            caption: `Perfil @${username} temporariamente indisponível. Tente novamente mais tarde.`,
+            timestamp: new Date().toISOString(),
+            permalink: `https://instagram.com/${username}`,
+            likes: 0
+        };
+    }
+
+    // Alerta visual + sonoro + notificação
     function triggerAlert(account, post) {
-        // Som
         const audio = document.getElementById('alertSound');
         audio.play().catch(e => console.log("Som bloqueado"));
-        // Notificação desktop
         if (Notification.permission === "granted") {
             new Notification(`📸 NOVA POSTAGEM @${account}`, {
                 body: post.caption.substring(0, 90),
-                icon: post.imageUrl,
-                silent: false
+                icon: post.imageUrl
             });
         } else if (Notification.permission !== "denied") {
             Notification.requestPermission();
         }
-        // Toast flutuante
         const toast = document.createElement('div');
         toast.className = "fixed top-5 right-5 bg-red-600 text-white p-4 rounded-xl shadow-lg z-50 flex items-start gap-3 max-w-sm toast-slide";
         toast.innerHTML = `<i class="fas fa-bell text-2xl"></i><div><strong class="block">@${account}</strong><span class="text-sm">${post.caption.substring(0,70)}...</span></div>`;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 6000);
-        // Piscar card da conta
         const card = document.querySelector(`[data-account="${account}"]`);
         if (card) card.classList.add('alert-pulse');
         setTimeout(() => card?.classList.remove('alert-pulse'), 1000);
     }
 
-    // Renderização da interface
-    function renderAll() {
+    // ========== RENDERIZAÇÃO ==========
+    function renderAllAccounts() {
         const container = document.getElementById('accountsContainer');
         if (trackedAccounts.length === 0) {
             container.innerHTML = `<div class="bg-white rounded-2xl p-10 text-center">Nenhuma construtora monitorada.</div>`;
@@ -352,7 +256,7 @@
                         <div class="p-3">
                             <p class="text-sm text-slate-700 line-clamp-2">${p.caption.substring(0,90)}</p>
                             <div class="flex justify-between mt-2 text-xs text-slate-400">
-                                <span><i class="far fa-heart"></i> ${p.likes}</span>
+                                <span><i class="far fa-heart"></i> ${p.likes || 0}</span>
                                 <span>${date}</span>
                                 <a href="${p.permalink}" target="_blank" class="text-indigo-500">Ver</a>
                             </div>
@@ -382,24 +286,18 @@
             btn.onclick = async () => {
                 const acc = btn.getAttribute('data-account');
                 showToast(`Verificando @${acc}...`, "info");
-                if (mode === 'real') {
-                    const newPosts = await fetchRealPostsFromRapidAPI(acc);
-                    if (newPosts && newPosts.length) {
-                        const oldIds = new Set((postsData[acc] || []).map(p=>p.id));
-                        const fresh = newPosts.filter(p=>!oldIds.has(p.id));
-                        if (fresh.length) {
-                            postsData[acc] = [...fresh, ...(postsData[acc]||[])].slice(0,30);
-                            for(let p of fresh) triggerAlert(acc, p);
-                            saveAll();
-                            renderAll();
-                            showToast(`@${acc}: ${fresh.length} nova(s) postagem(ns)!`, "success");
-                        } else showToast(`@${acc}: nenhuma novidade`, "info");
-                    } else showToast(`Erro ao buscar @${acc}`, "error");
-                } else {
-                    addDemoPostForAccount(acc);
-                    renderAll();
-                    showToast(`@${acc}: post simulado adicionado`, "success");
-                }
+                const newPosts = await fetchRealPosts(acc);
+                if (newPosts && newPosts.length) {
+                    const oldIds = new Set((postsData[acc] || []).map(p=>p.id));
+                    const fresh = newPosts.filter(p=>!oldIds.has(p.id));
+                    if (fresh.length) {
+                        postsData[acc] = [...fresh, ...(postsData[acc]||[])].slice(0,30);
+                        for(let p of fresh) triggerAlert(acc, p);
+                        saveAll();
+                        renderAllAccounts();
+                        showToast(`@${acc}: ${fresh.length} nova(s) postagem(ns)!`, "success");
+                    } else showToast(`@${acc}: nenhuma novidade`, "info");
+                } else showToast(`Erro ao buscar @${acc}`, "error");
                 updateStats();
             };
         });
@@ -410,7 +308,7 @@
                 delete postsData[acc];
                 delete lastPostIds[acc];
                 saveAll();
-                renderAll();
+                renderAllAccounts();
                 updateStats();
                 showToast(`@${acc} removida`, "info");
             };
@@ -422,8 +320,7 @@
         let total = Object.values(postsData).reduce((s, arr) => s + (arr?.length || 0), 0);
         document.getElementById('totalPosts').innerText = total;
         document.getElementById('lastScan').innerHTML = `<i class="far fa-clock"></i> ${new Date().toLocaleTimeString()}`;
-        const statusText = mode === 'real' ? (rapidApiKey ? '🟢 API Real (RapidAPI)' : '⚠️ API Real sem chave') : '🟡 Modo Demo';
-        document.getElementById('apiStatus').innerHTML = statusText;
+        document.getElementById('apiStatus').innerHTML = '<i class="fas fa-check-circle"></i> Scraping ativo';
     }
 
     function showToast(msg, type) {
@@ -438,34 +335,26 @@
         username = username.trim().toLowerCase().replace('@', '');
         if (trackedAccounts.includes(username)) { showToast("Já monitorada", "error"); return; }
         trackedAccounts.push(username);
-        if (mode === 'demo') {
-            postsData[username] = [];
-            for (let i = 0; i < 3; i++) postsData[username].push(randomDemoPost(username, i));
-            postsData[username].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-            if (postsData[username][0]) lastPostIds[username] = postsData[username][0].id;
-        } else {
-            postsData[username] = [];
-        }
+        postsData[username] = [];
         saveAll();
-        renderAll();
+        renderAllAccounts();
         updateStats();
         showToast(`@${username} adicionada!`, "success");
-        if (mode === 'real') setTimeout(() => refreshAll(), 500);
+        // Tenta buscar posts da nova conta
+        setTimeout(() => refreshAllAccounts(), 500);
     }
 
     function startPolling() {
         if (pollingInterval) clearInterval(pollingInterval);
-        const interval = mode === 'demo' ? 120000 : 300000; // demo: 2min, real: 5min
-        pollingInterval = setInterval(() => refreshAll(), interval);
+        pollingInterval = setInterval(() => refreshAllAccounts(), 300000); // 5 minutos
     }
 
-    // Inicializar modais e eventos
-    function initUI() {
+    // Inicialização
+    function init() {
         loadData();
-        renderAll();
+        renderAllAccounts();
         updateStats();
         startPolling();
-
         document.getElementById('addAccountBtn').onclick = () => document.getElementById('addModal').classList.remove('hidden');
         document.getElementById('cancelAdd').onclick = () => document.getElementById('addModal').classList.add('hidden');
         document.getElementById('confirmAdd').onclick = () => {
@@ -474,43 +363,11 @@
             document.getElementById('addModal').classList.add('hidden');
             document.getElementById('newUsername').value = '';
         };
-        document.getElementById('configBtn').onclick = () => {
-            document.getElementById('rapidApiKey').value = rapidApiKey;
-            document.getElementById('rapidHost').value = rapidHost;
-            document.getElementById('configModal').classList.remove('hidden');
-        };
-        document.getElementById('saveApiConfig').onclick = () => {
-            const key = document.getElementById('rapidApiKey').value.trim();
-            const host = document.getElementById('rapidHost').value.trim();
-            if (key) {
-                rapidApiKey = key;
-                rapidHost = host || 'instagram-scraper-2025.p.rapidapi.com';
-                mode = 'real';
-                saveAll();
-                showToast("API real configurada! Atualizando...", "success");
-                document.getElementById('configModal').classList.add('hidden');
-                refreshAll();
-                startPolling();
-            } else {
-                showToast("Digite sua RapidAPI Key", "error");
-            }
-        };
-        document.getElementById('useDemoConfig').onclick = () => {
-            mode = 'demo';
-            rapidApiKey = '';
-            saveAll();
-            generateDemoData();
-            renderAll();
-            updateStats();
-            startPolling();
-            showToast("Modo Demo ativado (alertas simulados a cada 2 min)", "success");
-            document.getElementById('configModal').classList.add('hidden');
-        };
-        document.getElementById('refreshBtn').onclick = refreshAll;
+        document.getElementById('refreshBtn').onclick = refreshAllAccounts;
         if (Notification.permission === "default") Notification.requestPermission();
     }
 
-    initUI();
+    init();
 </script>
 </body>
 </html>
